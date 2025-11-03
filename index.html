@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarkaç Simülasyonu)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px; /* Kenar boşluğu eklendi */
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: row;
+            /* DÜZELTME: Masaüstü için maksimum genişlik eklendi */
+            max-width: 1200px; 
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .controls {
+            /* Genişlik 320px olarak güncellendi (orijinal hali) */
+            width: 320px;
+            flex-shrink: 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 24px;
+        
+		
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .checkbox-group {
+            margin-bottom: 25px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-with-unit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .unit {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            min-width: 40px;
+        }
+
+        .radio-group {
+            margin-top: 25px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .radio-option input {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .radio-option label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .canvas-area {
+            flex: 1; /* Orijinal flex: 1 olarak güncellendi */
+            min-width: 0;
+            padding: 10px;
+            display: flex;
+         
+            justify-content: center;
+            background: #ffffff;
+            overflow: hidden; 
+        }
+
+        canvas {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+ 
+        
+        /* * DÜZELTME: @media (min-width: 801px) bloğu, 
+         * kayma sorununa yol açtığı için kaldırıldı.
+         */
+
+        /* Mobil (kaydırmalı) görünüm KORUNDU */
+        @media (max-width: 800px) {
+            /* padding: 0 ve min-height: 0 eklendi */
+            body {
+                padding: 0;
+                min-height: 0;
+            }
+            .container {
+                flex-direction: column; 
+                width: 100%;
+                height: auto; 
+                border-radius: 0; /* Mobilde tam ekran */
+            }
+            
+            .controls {
+                flex-basis: auto; 
+                width: 100%; 
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            }
+            
+            .canvas-area {
+                border-left: none; 
+                width: 100%;
+                /* ANAHTAR: Yatay kaydırmayı etkinleştir */
+                overflow-x: auto; 
+                /* ANAHTAR: Kaydırmanın çalışması için içeriği sola hizala */
+                justify-content: flex-start;
+                align-items: flex-start;
+                padding: 20px; /* Mobilde padding azaltıldı */
+            }
+            
+            canvas {
+                /* ANAHTAR: Canvas'ı 540x400'e sabitle (mobil kaydırmayı zorla) */
+                width: 540px;
+                max-width: 540px; /* max-width: 100% 'ü ezer */
+                height: 400px; 
+            }
+			
+			.input-group {
+    margin-bottom: 10px;
+    /* YENİ EKLENENLER */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+}
+
+label {
+    /* display: block; KALDIRILDI */
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    /* margin-bottom: 8px; KALDIRILDI */
+    /* YENİ EKLENENLER */
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+  .checkbox-group {
+            margin-bottom: 15px;
+        }
+}
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1></h1>
+            
+            <div class="button-group">
+                <button class="primary" id="startButton">Başlat</button>
+                <button class="secondary" id="resetButton">Geri</button>
+            </div>
+
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="slowMotion">
+                    Ağır çekim
+                </label>
+            </div>
+
+            <div class="input-group">
+                <label for="length">Sarkaç uzunluğu:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="length" value="5,000">
+                    <span class="unit">m</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="gravity">Yer çekimi ivmesi:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="gravity" value="9,81">
+                    <span class="unit">m/s²</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="mass">Kütle:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="mass" value="1,000">
+                    <span class="unit">kg</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="amplitude">Genlik:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="amplitude" value="10,0">
+                    <span class="unit">°</span>
+                </div>
+            </div>
+
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="elongation" name="display" value="0" checked>
+                    <label for="elongation" style="color: #ff0000;">Uzama (yer değiştirme)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="velocity" name="display" value="1">
+                    <label for="velocity" style="color: #C3C800;">Hız</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="acceleration" name="display" value="2">
+                    <label for="acceleration" style="color: #82cea4;">İvme</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="force" name="display" value="3">
+                    <label for="force" style="color: #7FBCFF;">Kuvvet</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="energy" name="display" value="4">
+                    <label for="energy">Enerji</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <canvas id="canvas" width="540" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript kodunda (id="canvas") herhangi bir değişiklik yapılmadı.
+        // CSS, bu ID'yi ve üst sınıfları hedef alarak çalışır.
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const text01 = ["Başlat", "Duraklat", "Devam"];
+        const text02 = "Maksimum";
+        const text03 = "Uzama (yer değiştirme)";
+        const text04 = "Hız";
+        const text05 = "İvme (teğetsel bileşen)";
+        const text06 = "Kuvvet (teğetsel bileşen)";
+        const text07 = "Potansiyel Enerji";
+        const text08 = "Kinetik Enerji";
+        const text09 = "Toplam Enerji";
+        const text10 = "(s)";
+        const text11 = "(m)";
+        const text12 = "(m/s)";
+        const text13 = "(m/s²)";
+        const text14 = "(N)";
+        const text15 = "(J)";
+        const text16 = "Salınım süresi";
+
+        const decimalSeparator = ",";
+        const symbolTime = "t";
+        const symbolElongation = "s";
+        const symbolVelocity = "v";
+        const symbolAcceleration = "a";
+        const symbolTangential = "";
+        const symbolForce = "F";
+        const symbolEnergy = "E";
+        const symbolPotential = "pot";
+        const symbolKinetic = "kin";
+        const second = "s";
+        const meter = "m";
+        const meterPerSecond = "m/s";
+        const meterPerSecond2 = "m/s²";
+        const newton = "N";
+        const joule = "J";
+
+        const colorClock1 = "#85afdc";
+        const colorClock2 = "#2c3045";
+        const colorClock3 = "#ff0000";
+        const colorElongation = "#ff0000";
+        const colorVelocity = "#C3C800";
+        const colorAcceleration = "#5A145A";
+        const colorForce = "#7FBCFF";
+        const colorBody = "#ffffff";
+
+        const DEG = Math.PI / 180;
+        const ax = 120, ay = 30;
+        const xD = 260;
+        const yD1 = 180, yD2 = 165;
+        const FONT1 = "normal normal bold 12px sans-serif";
+        const tPix = 20;
+
+        const width = canvas.width;
+        const height = canvas.height;
+        let on = false;
+        let slow = false;
+        let t0 = null;
+        let t = 0;
+        let tU = 0;
+        let l = 5;
+        let lPix = 0;
+        let g = 9.81;
+        let m = 1;
+        let omega = 0;
+        let tPer = 0;
+        let phi = 0;
+        let sinPhi = 0, cosPhi = 0;
+        let alpha0 = 10 * DEG;
+        let alpha = 0;
+        let sinAlpha = 0, cosAlpha = 0;
+        let yPix = 0;
+        let px = 0, py = 0;
+        let nrSize = 0;
+
+        function calculation() {
+            omega = Math.sqrt(g / l);
+            tPer = (2 * Math.PI) / omega;
+            lPix = 25 * l;
+        }
+
+        function ToString(n, d, fix) {
+            const s = fix ? n.toFixed(d) : n.toPrecision(d);
+            return s.replace(".", decimalSeparator);
+        }
+
+        function newPath() {
+            ctx.beginPath();
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+        }
+
+        function rectangle(x, y, w, h, c) {
+            if (c) ctx.fillStyle = c;
+            newPath();
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeRect(x, y, w, h);
+        }
+
+        function circle(x, y, r, c) {
+            if (c) ctx.fillStyle = c;
+            newPath();
+            ctx.arc(x, y, r, 0, 2 * Math.PI, true);
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function pendulum() {
+            alpha = alpha0 * cosPhi;
+            sinAlpha = Math.sin(alpha);
+            cosAlpha = Math.cos(alpha);
+            px = ax + lPix * sinAlpha;
+            py = ay + lPix * cosAlpha;
+            newPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(px, py);
+            ctx.closePath();
+            ctx.stroke();
+            circle(px, py, 5, colorBody);
+        }
+
+        function clock(x, y) {
+            rectangle(x - 60, y - 16, 120, 32, colorClock1);
+            rectangle(x - 50, y - 10, 100, 20, colorClock2);
+            ctx.fillStyle = "#ff0000";
+            ctx.font = "normal normal bold 16px monospace";
+            ctx.textAlign = "center";
+            const displayTime = on || t > 0 ? t : 0;
+            const n = Math.floor(displayTime / 1000);
+            let s = (displayTime - n * 1000).toFixed(3) + " " + second;
+            s = s.replace(".", decimalSeparator);
+            while (s.length < 9) s = " " + s;
+            ctx.fillText(s, x, y + 5);
+        }
+
+        function arrow(x1, y1, x2, y2, w = 1) {
+            const dx = x2 - x1, dy = y2 - y1;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            if (length == 0) return;
+            const dxUnit = dx / length, dyUnit = dy / length;
+            const s = 2.5 * w + 7.5;
+            let xSp = x2 - s * dxUnit, ySp = y2 - s * dyUnit;
+            const h = 0.5 * w + 3.5;
+            const xSp1 = xSp - h * dyUnit, ySp1 = ySp + h * dxUnit;
+            const xSp2 = xSp + h * dyUnit, ySp2 = ySp - h * dxUnit;
+            xSp = x2 - 0.6 * s * dxUnit;
+            ySp = y2 - 0.6 * s * dyUnit;
+            ctx.beginPath();
+            ctx.lineWidth = w;
+            ctx.moveTo(x1, y1);
+            if (length < 5) ctx.lineTo(x2, y2);
+            else ctx.lineTo(xSp, ySp);
+            ctx.stroke();
+            if (length < 5) return;
+            ctx.beginPath();
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.moveTo(xSp, ySp);
+            ctx.lineTo(xSp1, ySp1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(xSp2, ySp2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function arrowPendulum(r, phi) {
+            const x = px + r * Math.cos(phi);
+            const y = py - r * Math.sin(phi);
+            arrow(px, py, x, y, 3);
+        }
+
+        function alignText(s, t, x, y) {
+            ctx.font = FONT1;
+            if (t == 0) ctx.textAlign = "left";
+            else if (t == 1) ctx.textAlign = "center";
+            else ctx.textAlign = "right";
+            ctx.fillText(s, x, y);
+        }
+
+        function horizontalAxis(x, y) {
+            ctx.strokeStyle = "#000000";
+            arrow(x - 20, y, x + 240, y);
+            alignText(symbolTime, 1, x + 230, y + 15);
+            alignText(text10, 1, x + 230, y + 27);
+            const t0 = Math.ceil(tU);
+            const x0 = Math.round(x + tPix * (t0 - tU));
+            for (let i = 0; i <= 10; i++) {
+                const xs = x0 + i * tPix;
+                ctx.moveTo(xs, y - 3);
+                ctx.lineTo(xs, y + 3);
+                if (xs >= x + 5 && xs <= x + 215 && (t0 + i <= 100 || (t0 + i) % 2 == 0))
+                    alignText("" + (t0 + i), 1, xs, y + 13);
+            }
+            ctx.stroke();
+        }
+
+        function verticalAxis(x, y, yLow, yHigh, maxSI) {
+            const pot10 = Math.pow(10, Math.floor(Math.log(maxSI) / Math.LN10));
+            const q = maxSI / pot10;
+            let n;
+            if (q > 5) n = 10;
+            else if (q > 2) n = 5;
+            else n = 2;
+            ctx.strokeStyle = "#000000";
+            arrow(x, yLow, x, yHigh);
+            const n0 = nrSize < 4 ? -n : 0;
+            ctx.beginPath();
+            for (let i = n0; i <= n; i++) {
+                const ys = y - (i * 100) / n;
+                ctx.moveTo(x - 3, ys);
+                ctx.lineTo(x + 3, ys);
+                let s = Number(i * pot10).toPrecision(1);
+                if (Math.abs(i * pot10) >= 10) s = "" + Math.round(i * pot10);
+                s = s.replace(".", decimalSeparator);
+                if ((n < 10 || i % 2 == 0) && i != 0) alignText(s, 2, x - 3, ys + 4);
+            }
+            ctx.stroke();
+            yPix = 100 / n / pot10;
+        }
+
+        function sinus(x, y, per, ampl, xMin, xMax) {
+            const omega = (2 * Math.PI) / per;
+            newPath();
+            let xx = xMin;
+            ctx.moveTo(xx, y - ampl * Math.sin(omega * (xx - x)));
+            while (xx < xMax) {
+                xx++;
+                ctx.lineTo(xx, y - ampl * Math.sin(omega * (xx - x)));
+            }
+            ctx.stroke();
+        }
+
+        function diagram(type, x, y, yMax) {
+            horizontalAxis(x, y);
+            verticalAxis(x, y, y + 120, y - 135, yMax);
+            sinus(x - type * tPer * 5 - tU * tPix, y, tPer * tPix, yMax * yPix, x, x + 200);
+        }
+
+        function drawMomVal(val, x, y, c) {
+            x += (t - tU) * tPix;
+            y -= val * yPix;
+            circle(x, y, 2, c);
+        }
+
+        function writeValue(s, v, u, n, x1, x2, y) {
+            alignText(s + ":", 0, x1, y);
+            let sv = v.toPrecision(n);
+            sv = sv.replace(".", decimalSeparator);
+            alignText(sv + " " + u, 0, x2, y);
+        }
+
+        function centerTextIndex(s1, s2, x, y) {
+            const w1 = ctx.measureText(s1).width;
+            const w2 = ctx.measureText(s2).width;
+            const x0 = x - (w1 + w2) / 2;
+            alignText(s1, 0, x0, y);
+            alignText(s2, 0, x0 + w1 + 1, y + 5);
+        }
+
+        function drawElongation() {
+            const sMax = l * alpha0;
+            const s = sMax * cosPhi;
+            diagram(1, xD, yD1, sMax);
+            alignText("x", 1, xD - 25, yD1 - 130);
+            alignText(text11, 1, xD - 25, yD1 - 118);
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = colorElongation;
+            const pos = alpha >= 0;
+            const w0 = pos ? Math.PI / 2 : Math.PI / 2 - alpha;
+            const w1 = pos ? Math.PI / 2 - alpha : Math.PI / 2;
+            ctx.arc(ax, ay, lPix, w0, w1, true);
+            ctx.stroke();
+            drawMomVal(s, xD, yD1, colorElongation);
+            ctx.fillStyle = colorElongation;
+            writeValue(text03, s, meter, 3, xD, xD + 200, height - 50);
+            writeValue("(" + text02, sMax, meter + ")", 3, xD, xD + 200, height - 30);
+        }
+
+        function drawVelocity() {
+            const vMax = l * alpha0 * omega;
+            const v = -vMax * sinPhi;
+            diagram(2, xD, yD1, vMax);
+            alignText(symbolVelocity, 1, xD - 28, yD1 - 130);
+            alignText(text12, 1, xD - 28, yD1 - 118);
+            ctx.strokeStyle = colorVelocity;
+            arrowPendulum(v * yPix, alpha0 * cosPhi);
+            drawMomVal(v, xD, yD1);
+            ctx.fillStyle = colorVelocity;
+            writeValue(text04, v, meterPerSecond, 3, xD, xD + 200, height - 50);
+            writeValue("(" + text02, vMax, meterPerSecond + ")", 3, xD, xD + 200, height - 30);
+        }
+
+        function drawAcceleration() {
+            const aMax = l * alpha0 * omega * omega;
+            const a = -aMax * cosPhi;
+            diagram(3, xD, yD1, aMax);
+            centerTextIndex(symbolAcceleration, symbolTangential, xD - 30, yD1 - 130);
+            alignText(text13, 1, xD - 30, yD1 - 113);
+            ctx.strokeStyle = colorAcceleration;
+            arrowPendulum(a * yPix, alpha0 * cosPhi);
+            drawMomVal(a, xD, yD1);
+            ctx.fillStyle = colorAcceleration;
+            writeValue(text05, a, meterPerSecond2, 3, xD - 30, xD + 220, height - 50);
+            writeValue("(" + text02, aMax, meterPerSecond2 + ")", 3, xD - 30, xD + 220, height - 30);
+        }
+
+        function drawForce() {
+            const fMax = m * l * alpha0 * omega * omega;
+            const f = -fMax * cosPhi;
+            diagram(3, xD, yD1, fMax);
+            centerTextIndex(symbolForce, symbolTangential, xD - 30, yD1 - 130);
+            alignText(text14, 1, xD - 30, yD1 - 113);
+            ctx.strokeStyle = colorForce;
+            arrowPendulum(f * yPix, alpha0 * cosPhi);
+            drawMomVal(f, xD, yD1);
+            ctx.fillStyle = colorForce;
+            writeValue(text06, f, newton, 3, xD - 30, xD + 220, height - 50);
+            writeValue("(" + text02, fMax, newton + ")", 3, xD - 30, xD + 220, height - 30);
+        }
+
+        function diagramEnergy(x, y, e) {
+            horizontalAxis(x, y);
+            verticalAxis(x, y, y + 20, y - 125, e);
+            const x1 = x + 200;
+            const y1 = y - e * yPix;
+            ctx.beginPath();
+            ctx.moveTo(x, y1);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+            const xx = x - tU * tPix;
+            const per = tPer * 10;
+            const ampl = (e * yPix) / 2;
+            sinus(xx - tPer * 2.5, y - ampl, per, ampl, x, x + 200);
+            sinus(xx - tPer * 7.5, y - ampl, per, ampl, x, x + 200);
+        }
+
+        function drawEnergy() {
+            let e = l * alpha0 * omega;
+            e = (m * e * e) / 2;
+            const part = cosPhi * cosPhi;
+            const eP = e * part, eK = e - eP;
+            diagramEnergy(xD, yD2, e);
+            centerTextIndex(symbolEnergy, symbolPotential, xD - 30, yD2 - 125);
+            alignText(text15, 1, xD - 30, yD2 - 108);
+            centerTextIndex(symbolEnergy, symbolKinetic, xD + 30, yD2 - 125);
+            alignText(text15, 1, xD + 30, yD2 - 108);
+            ctx.fillStyle = colorElongation;
+            writeValue(text07, eP, joule, 3, xD, xD + 200, height - 70);
+            ctx.fillStyle = colorVelocity;
+            writeValue(text08, eK, joule, 3, xD, xD + 200, height - 50);
+            ctx.fillStyle = "#000000";
+            writeValue(text09, e, joule, 3, xD, xD + 200, height - 30);
+            const dy = part * 100;
+            rectangle(300, 205, 50, dy, colorElongation);
+            if (part > 0.001 || on) alignText(text07, 0, 360, 220);
+            rectangle(300, 205 + dy, 50, 100 - dy, colorVelocity);
+            if (part < 0.999 || on) alignText(text08, 0, 360, 300);
+            drawMomVal(eP, xD, yD2, colorElongation);
+            drawMomVal(eK, xD, yD2, colorVelocity);
+        }
+
+        function paint() {
+            ctx.clearRect(0, 0, width, height);
+            rectangle(ax - 50, ay - 5, 100, 5, "#2c3045");
+            if (on) {
+                const t1 = new Date();
+                let dt = (t1.getTime() - (t0?.getTime() || 0)) / 1000;
+                if (slow) dt /= 10;
+                t += dt;
+                t0 = t1;
+            }
+            tU = t < 5 ? 0 : t - 5;
+            phi = omega * t;
+            sinPhi = Math.sin(phi);
+            cosPhi = Math.cos(phi);
+            pendulum();
+            clock(ax, 340);
+            switch (nrSize) {
+                case 0:
+                    drawElongation();
+                    break;
+                case 1:
+                    drawVelocity();
+                    break;
+                case 2:
+                    drawAcceleration();
+                    break;
+                case 3:
+                    drawForce();
+                    break;
+                case 4:
+                    drawEnergy();
+                    break;
+            }
+            const s = (text16 + ":  " + tPer.toPrecision(3) + " " + second).replace(".", decimalSeparator);
+            ctx.fillStyle = "#000000";
+            alignText(s, 1, ax, height - 30);
+        }
+
+        calculation();
+        const interval = setInterval(paint, 40);
+
+        // Event listeners
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        const slowMotionCheckbox = document.getElementById('slowMotion');
+        const lengthInput = document.getElementById('length');
+        const gravityInput = document.getElementById('gravity');
+        const massInput = document.getElementById('mass');
+        const amplitudeInput = document.getElementById('amplitude');
+        const displayRadios = document.querySelectorAll('input[name="display"]');
+
+        let isPaused = false;
+
+        startButton.addEventListener('click', () => {
+            if (!on) {
+                on = true;
+                t0 = new Date();
+                isPaused = false;
+                startButton.textContent = 'Duraklat';
+            } else {
+                if (isPaused) {
+                    on = true;
+                    t0 = new Date();
+                    isPaused = false;
+                    startButton.textContent = 'Duraklat';
+                } else {
+                    on = false;
+                    isPaused = true;
+                    startButton.textContent = 'Devam';
+                }
+            }
+        });
+
+        resetButton.addEventListener('click', () => {
+            on = false;
+            isPaused = false;
+            t = 0;
+            t0 = null;
+            startButton.textContent = 'Başlat';
+            paint();
+        });
+
+        slowMotionCheckbox.addEventListener('change', (e) => {
+            slow = e.target.checked;
+        });
+
+        function updateSimulation() {
+            l = parseFloat(lengthInput.value.replace(',', '.'));
+            g = parseFloat(gravityInput.value.replace(',', '.'));
+            m = parseFloat(massInput.value.replace(',', '.'));
+            alpha0 = parseFloat(amplitudeInput.value.replace(',', '.')) * DEG;
+            calculation();
+        }
+
+        lengthInput.addEventListener('change', updateSimulation);
+        gravityInput.addEventListener('change', updateSimulation);
+        massInput.addEventListener('change', updateSimulation);
+        amplitudeInput.addEventListener('change', updateSimulation);
+
+        displayRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                nrSize = parseInt(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>
